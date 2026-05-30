@@ -1,0 +1,1153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Field Hockey Stats Tracker</title>
+<style>
+ 
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    margin: 0;
+    background: #f4f6f8;
+    padding-bottom: 100px;
+}
+
+h1 {
+    text-align: center;
+    padding: 15px;
+    margin: 0;
+    background: #111827; /* ✅ neutral dark (not in your teams) */
+    color: white;
+    letter-spacing: 0.5px;
+    padding-top: 20px;
+}
+
+.controls {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding: 10px;
+    text-align: center;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+select {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+    padding: 10px;
+}
+
+.stat {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+.stat h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+.team-block {
+    margin-bottom: 10px;
+}
+
+.counter {
+    font-size: 20px;
+    font-weight: bold;
+    margin-left: 6px;
+}
+
+.home {
+    color: #0d6efd;
+}
+
+.away {
+    color: #dc3545;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+button {
+    flex: 1;
+    padding: 14px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s;
+}
+
+button:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+}
+
+.plus {
+    background: #198754;
+    color: white;
+}
+
+.minus {
+    background: #dc3545;
+    color: white;
+}
+
+.preview {
+    margin-top: 20px;
+    padding: 10px;
+}
+
+
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.preview-card {
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.preview-card h5 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+}
+
+.preview-values {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.preview-home {
+    color: #0d6efd;
+}
+
+.preview-away {
+    color: #dc3545;
+}
+
+.preview-quarter {
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    text-align: center;
+}
+
+
+.actions {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+.actions button {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+}
+
+.export {
+    background: #0d6efd;
+    color: white;
+}
+
+.reset {
+    background: #6c757d;
+    color: white;
+}
+
+.quarter-tabs {
+    display: inline-flex;
+    background: #e9ecef;
+    padding: 5px;
+    border-radius: 999px;
+    gap: 5px;
+}
+
+.quarter-tab {
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: transparent;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.quarter-tab.active {
+    background: #0d6efd;
+    color: white;
+}
+
+.quarter-tab:active {
+    transform: scale(0.95);
+}
+
+
+
+.scoreboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    color: white;
+    padding: 15px;
+    position: sticky;
+    top: 95px;
+    z-index: 9;
+    transition: background 0.3s ease;
+}
+
+
+.team {
+    text-align: center;
+}
+
+.team-name {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-bottom: 5px;
+}
+
+.score {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.home-team .score {
+    color: white;
+}
+
+.away-team .score {
+    color: white;
+}
+
+.score-divider {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.view-tabs {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    gap: 5px;
+}
+
+.view-tab {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: none;
+    background: #dee2e6;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.view-tab.active {
+    background: #198754;
+    color: white;
+}
+
+
+.winner-home {
+    background: rgba(13,110,253,0.1);
+    border-radius: 6px;
+    padding: 2px 6px;
+    outline: 2px solid currentColor;
+}
+
+.winner-away {
+    background: rgba(220,53,69,0.1);
+    border-radius: 6px;
+    padding: 2px 6px;
+    outline: 2px solid currentColor;
+}
+
+
+.preview-values span {
+    transition: all 0.2s ease;
+}
+
+.team-select {
+    position: fixed;
+    top: 10px;          /* ✅ VERY TOP */
+    font-size: 24px;
+    background: rgba(255,255,255,0.9); /* slight transparency looks nicer */
+    padding: 10px;
+    border-radius: 10px;
+    z-index: 11000;     /* ✅ ABOVE EVERYTHING */
+    cursor: pointer;
+    backdrop-filter: blur(5px); /* 🔥 subtle modern effect */
+}
+
+.team-select.left { left: 10px; }
+.team-select.right { right: 10px; }
+
+.team-menu {
+    position: fixed;
+    top: 60px; /* ✅ sits just under hamburger */
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    display: none;
+    z-index: 10000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    width: 200px;
+}
+
+
+/* ✅ LEFT MENU */
+#homeMenu {
+    left: 10px;
+}
+
+/* ✅ RIGHT MENU */
+#awayMenu {
+    right: 10px;
+}
+
+.team-menu button {
+    display: block;
+    width: 100%;
+    margin: 5px 0;
+}
+
+
+#menuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.2);
+    display: none;
+    z-index: 9990; /* ✅ BELOW menu */
+}
+
+
+.score-divider {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    padding: 0 10px;
+}
+
+.momentum-container {
+    padding: 20px 10px;
+    background: white;
+}
+
+.momentum-bar {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    overflow: hidden;
+    display: flex;
+}
+
+.momentum-home {
+    height: 100%;
+    width: 50%;
+    transition: width 0.3s ease;
+}
+
+.momentum-away {
+    height: 100%;
+    width: 50%;
+    transition: width 0.3s ease;
+}
+
+
+.stat-group-title {
+    grid-column: 1 / -1; /* full width */
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #dee2e6;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+.stat-group-title {
+    position: sticky;
+    top: 160px; /* stays visible while scrolling */
+    background: white;
+    z-index: 5;
+}
+
+
+</style>
+</head>
+<body>
+<div class="team-select left" onclick="toggleMenu('homeMenu')">☰</div>
+<div class="team-select right" onclick="toggleMenu('awayMenu')">☰</div>
+
+<div class="team-menu" id="homeMenu"></div>
+<div class="team-menu" id="awayMenu"></div>
+
+<h1>Field Hockey Stats Tracker</h1>
+
+
+<div class="scoreboard">
+    <div class="team home-team">
+        <div class="team-name">HOME</div>
+        <div class="score" id="homeScore">0</div>
+    </div>
+
+
+
+
+
+    <div class="score-divider">-</div>
+
+    <div class="team away-team">
+        <div class="team-name">AWAY</div>
+        <div class="score" id="awayScore">0</div>
+    </div>
+</div>
+
+<div class="momentum-container">
+    <div class="momentum-bar">
+        <div class="momentum-home" id="momentumHome"></div>
+        <div class="momentum-away" id="momentumAway"></div>
+    </div>
+</div>
+
+<div class="controls">
+    <div class="quarter-tabs" id="quarterTabs"></div>
+    <div class="view-tabs" id="viewTabs"></div>
+</div>
+
+
+
+
+<div class="stats-container" id="statsContainer"></div>
+
+<div class="preview">
+    <h2>Live Stats Preview</h2>
+    <div id="previewTable"></div>
+</div>
+
+<div class="actions">
+
+    <button class="export" onclick="exportCSV()">Export</button>
+    <button class="reset" onclick="resetStats()">Reset</button>
+
+</div>
+
+<script>
+let currentQuarter = "Q1";
+let currentView = "QUARTER"; // QUARTER, FIRST_HALF, SECOND_HALF, FULL
+
+
+const statGroups = [
+    {
+        title: "Normal Turn Overs",
+        stats: [
+            "Turnover Offensive 25",
+            "Turnover Defensive 25",
+            "Turnover Midfield"
+        ]
+    },
+    {
+        title: "Over Heads",
+        stats: [
+            "Overhead",
+            "Overhead Successful",
+            "Overhead Failed"
+        ]
+    },
+    {
+        title: "Attacking Corners",
+        stats: [
+            "Attacking Corner",
+            "Attacking Corner Goal",
+            "Attacking Corner No Goal"
+        ]
+    },
+    {
+        title: "Circle Opportunities",
+        stats: [
+            "Circle Entry",
+            "Shots on Goal",
+            "Goals",
+            "Strokes",
+            "Break Aways"
+        ]
+    },
+    {
+        title: "Turn Overs from Free Hits",
+        stats: [
+            "Turnover Off 16",
+            "Turnover Free Hit"
+        ]
+    },
+    {
+        title: "Side Line Turn Overs",
+        stats: [
+            "Turnover Side Line",
+            "Turnover Base Line",
+            "Turnover Crossed Ball"
+        ]
+    }
+];
+
+
+const teams = {
+    "Old Canberrans": "#D4AF37",       // Gold
+    "Central": "#4B0082",              // Dark Purple
+    "Western Districts": "#dc3545",    // Red
+    "St Patricks": "#198754",          // Green
+    "ANU Mens": "#0dcaf0",             // Light Blue
+    "Goulburn": "#0f5132",             // Dark Green
+    "United": "#0d6efd",               // Blue
+    "Albury Wodonga": "#ffc107"        // Yellow
+};
+
+let homeTeam = "Old Canberrans";
+let awayTeam = "United";
+
+const quarters = ["Q1","Q2","Q3","Q4"];
+
+// Data structure
+
+let stats = {};
+
+
+quarters.forEach(q => {
+    stats[q] = { Home: {}, Away: {} };
+
+    statGroups.forEach(group => {
+        group.stats.forEach(stat => {
+            stats[q].Home[stat] = 0;
+            stats[q].Away[stat] = 0;
+        });
+    });
+
+}); // ✅ ✅ ✅ THIS closes quarters loop
+
+
+
+
+const tabsContainer = document.getElementById("quarterTabs");
+
+quarters.forEach(q => {
+    const btn = document.createElement("button");
+    btn.className = "quarter-tab";
+    btn.textContent = q;
+
+    if (q === currentQuarter) {
+        btn.classList.add("active");
+    }
+
+    btn.onclick = () => {
+        currentQuarter = q;
+
+        // update active style
+        document.querySelectorAll(".quarter-tab").forEach(tab => {
+            tab.classList.remove("active");
+        });
+        btn.classList.add("active");
+
+        renderTable();
+        updateScoreboard();
+        updateMomentum();
+    };
+
+    tabsContainer.appendChild(btn);
+});
+
+
+// ✅ Load saved stats if they exist
+const savedStats = localStorage.getItem("hockeyStats");
+
+
+if (savedStats) {
+    stats = JSON.parse(savedStats);
+}
+
+// Create UI buttons
+const container = document.getElementById("statsContainer");
+
+
+statGroups.forEach(group => {
+
+    // ✅ Add section heading
+    const heading = document.createElement("div");
+    heading.className = "stat-group-title";
+    heading.textContent = group.title;
+    container.appendChild(heading);
+
+    group.stats.forEach(stat => {
+
+        const div = document.createElement("div");
+        div.className = "stat";
+
+        div.innerHTML = `
+            <h4>${stat}</h4>
+
+            <div class="team-block">
+                <strong class="home">Home 
+                    <span class="counter" id="${stat.replace(/\s+/g,'_')}-Home">0</span>
+                </strong>
+                <div class="buttons">
+                    <button class="plus" onclick="updateStat('${stat}','Home',1)">+1</button>
+                    <button class="minus" onclick="updateStat('${stat}','Home',-1)">-1</button>
+                </div>
+            </div>
+
+            <div class="team-block">
+                <strong class="away">Away 
+                    <span class="counter" id="${stat.replace(/\s+/g,'_')}-Away">0</span>
+                </strong>
+                <div class="buttons">
+                    <button class="plus" onclick="updateStat('${stat}','Away',1)">+1</button>
+                    <button class="minus" onclick="updateStat('${stat}','Away',-1)">-1</button>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(div);
+
+    });
+
+});
+
+
+
+const viewTabsContainer = document.getElementById("viewTabs");
+
+const views = [
+    { label: "Quarter", value: "QUARTER" },
+    { label: "1st Half", value: "FIRST_HALF" },
+    { label: "2nd Half", value: "SECOND_HALF" },
+    { label: "Overall", value: "FULL" }
+];
+
+views.forEach(v => {
+    const btn = document.createElement("button");
+    btn.className = "view-tab";
+    btn.textContent = v.label;
+
+    if (v.value === currentView) {
+        btn.classList.add("active");
+    }
+
+    btn.onclick = () => {
+        currentView = v.value;
+
+        document.querySelectorAll(".view-tab").forEach(tab => {
+            tab.classList.remove("active");
+        });
+
+        btn.classList.add("active");
+        renderTable();
+        updateScoreboard();
+        updateMomentum();
+    };
+
+    viewTabsContainer.appendChild(btn);
+});
+
+
+// Update stat function
+function updateStat(stat, team, value) {
+    const q = currentQuarter;
+
+    stats[q][team][stat] += value;
+    if (stats[q][team][stat] < 0) stats[q][team][stat] = 0;
+
+    // ✅ Update live counter
+    const counterId = `${stat.replace(/\s+/g,'_')}-${team}`;
+    const counterElement = document.getElementById(counterId);
+    if (counterElement) {
+        counterElement.textContent = stats[q][team][stat];
+    }
+    
+    // ✅ SAVE to localStorage
+    localStorage.setItem("hockeyStats", JSON.stringify(stats));
+
+    renderTable();
+    updateScoreboard();
+    updateMomentum();
+}
+
+
+// Render preview table
+function renderTable() {
+    
+const statsContainer = document.getElementById("statsContainer");
+
+// ✅ Show inputs ONLY in Quarter mode
+if (currentView === "QUARTER") {
+    statsContainer.style.display = "grid";
+} else {
+    statsContainer.style.display = "none";
+}
+
+    const container = document.getElementById("previewTable");
+    
+let quartersToUse = [];
+
+if (currentView === "QUARTER") {
+    quartersToUse = [currentQuarter];
+} else if (currentView === "FIRST_HALF") {
+    quartersToUse = ["Q1", "Q2"];
+} else if (currentView === "SECOND_HALF") {
+    quartersToUse = ["Q3", "Q4"];
+} else if (currentView === "FULL") {
+    quartersToUse = ["Q1", "Q2", "Q3", "Q4"];
+}
+
+
+
+let title = "";
+
+if (currentView === "QUARTER") {
+    title = `${currentQuarter} Stats`;
+} else if (currentView === "FIRST_HALF") {
+    title = "1st Half Stats";
+} else if (currentView === "SECOND_HALF") {
+    title = "2nd Half Stats";
+} else {
+    title = "Full Match Stats";
+}
+
+
+let html = `<div class="preview-quarter">${title}</div>`;
+html += `<div class="preview-grid">`;
+
+statGroups.forEach(group => {
+    group.stats.forEach(stat => {
+
+        let homeValue = 0;
+        let awayValue = 0;
+
+        quartersToUse.forEach(q => {
+            homeValue += stats[q].Home[stat];
+            awayValue += stats[q].Away[stat];
+        });
+
+        let homeClass = "preview-home";
+        let awayClass = "preview-away";
+
+        if (homeValue > awayValue) {
+            homeClass += " winner-home";
+        } else if (awayValue > homeValue) {
+            awayClass += " winner-away";
+        }
+
+        html += `
+            <div class="preview-card">
+                <h5>${stat}</h5>
+                <div class="preview-values">
+                    <span class="${homeClass}">${homeValue}</span>
+                    <span class="${awayClass}">${awayValue}</span>
+                </div>
+            </div>
+        `;
+    });
+});
+
+html += `</div>`;
+container.innerHTML = html;
+
+
+ 
+// ✅ Update live counters ONLY for current quarter
+["Home","Away"].forEach(team => {
+    statGroups.forEach(group => {
+        group.stats.forEach(stat => {
+            const id = `${stat.replace(/\s+/g,'_')}-${team}`;
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = stats[currentQuarter][team][stat];
+            }
+        });
+    });
+});
+
+
+}
+
+
+// Export as pdf document 
+
+async function exportCSV() {
+
+    const report = document.createElement("div");
+    report.style.padding = "20px";
+    report.style.background = "white";
+
+    const homeColor = teams[homeTeam];
+    const awayColor = teams[awayTeam];
+
+    report.innerHTML = `
+        <h2 style="text-align:center;">
+            ${homeTeam} vs ${awayTeam}
+        </h2>
+    `;
+
+    // ✅ TABLE
+    let tableHTML = `<table border="1" style="width:100%; border-collapse: collapse; font-size:12px;">`;
+    tableHTML += `<tr><th>Stat</th><th>Home</th><th>Away</th></tr>`;
+
+    
+statGroups.forEach(group => {
+    group.stats.forEach(stat => {
+
+        let homeTotal = 0;
+        let awayTotal = 0;
+
+        quarters.forEach(q => {
+            homeTotal += stats[q].Home[stat];
+            awayTotal += stats[q].Away[stat];
+        });
+
+        tableHTML += `
+            <tr>
+                <td>${stat}</td>
+                <td>${homeTotal}</td>
+                <td>${awayTotal}</td>
+            </tr>
+        `;
+    });
+    });
+
+    tableHTML += `</table>`;
+    report.innerHTML += tableHTML;
+
+    const chartsContainer = document.createElement("div");
+    chartsContainer.style.marginTop = "30px";
+    report.appendChild(chartsContainer);
+
+    document.body.appendChild(report);
+
+
+let chartPromises = [];
+
+statGroups.forEach(group => {
+    group.stats.forEach(stat => {
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 400;
+        canvas.height = 250;
+        canvas.style.marginTop = "20px";
+
+        chartsContainer.appendChild(canvas);
+
+        let homeData = [];
+        let awayData = [];
+        let labels = [];
+
+        quarters.forEach(q => {
+            labels.push(q);
+            homeData.push(stats[q].Home[stat]);
+            awayData.push(stats[q].Away[stat]);
+        });
+
+        const chartPromise = new Promise(resolve => {
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: homeTeam,
+                            data: homeData,
+                            backgroundColor: homeColor
+                        },
+                        {
+                            label: awayTeam,
+                            data: awayData,
+                            backgroundColor: awayColor
+                        }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    animation: {
+                        onComplete: () => resolve()
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: stat
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        });
+
+        chartPromises.push(chartPromise);
+
+    });
+}); // ✅ ✅ ✅ THIS WAS MISSING
+
+// ✅ WAIT AFTER loops are closed
+await Promise.all(chartPromises);
+
+
+    // ✅ Small extra delay for safety
+    await new Promise(r => setTimeout(r, 300));
+
+    // ✅ Now export
+    await html2pdf()
+        .from(report)
+        .set({
+            margin: 10,
+            filename: "match-report.pdf",
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        })
+        .save();
+
+    document.body.removeChild(report);
+}
+
+
+
+function resetStats() {
+    if (!confirm("Are you sure you want to reset all stats?")) return;
+
+    // ✅ Clear saved data
+    localStorage.removeItem("hockeyStats");
+
+    // ✅ Reset in-memory stats
+    quarters.forEach(q => {
+        stats[q] = { Home: {}, Away: {} };
+        
+        statGroups.forEach(group => {
+            group.stats.forEach(stat => {
+                stats[q].Home[stat] = 0;
+                stats[q].Away[stat] = 0;
+            });
+        });
+
+    }); // ✅ ✅ ✅ THIS WAS MISSING
+
+    // ✅ Reset UI values
+    currentQuarter = "Q1";
+
+    renderTable();
+    updateScoreboard();
+    updateMomentum();
+
+    alert("Stats have been reset ✅");
+}
+
+function updateScoreboard() {
+    let homeTotal = 0;
+    let awayTotal = 0;
+
+    quarters.forEach(q => {
+        homeTotal += stats[q].Home["Goals"];
+        awayTotal += stats[q].Away["Goals"];
+    });
+
+    document.getElementById("homeScore").textContent = homeTotal;
+    document.getElementById("awayScore").textContent = awayTotal;
+}
+
+
+
+function populateMenus() {
+    const homeMenu = document.getElementById("homeMenu");
+    const awayMenu = document.getElementById("awayMenu");
+
+    Object.keys(teams).forEach(team => {
+
+        const btn1 = document.createElement("button");
+        btn1.textContent = team;
+        btn1.style.background = teams[team] + "22"; // ✅ moved here
+        btn1.onclick = () => {
+            homeTeam = team;
+            applyTheme();
+            toggleMenu('homeMenu');
+        };
+
+        const btn2 = document.createElement("button");
+        btn2.textContent = team;
+        btn2.style.background = teams[team] + "22"; // ✅ moved here
+        btn2.onclick = () => {
+            awayTeam = team;
+            applyTheme();
+            toggleMenu('awayMenu');
+        };
+
+        homeMenu.appendChild(btn1);
+        awayMenu.appendChild(btn2);
+    });
+}
+
+
+
+
+function toggleMenu(id) {
+    const overlay = document.getElementById("menuOverlay");
+
+    // close all menus first
+    document.querySelectorAll(".team-menu").forEach(m => {
+        if (m.id !== id) m.style.display = "none";
+    });
+
+    const menu = document.getElementById(id);
+    const isOpen = menu.style.display === "block";
+
+    if (isOpen) {
+        menu.style.display = "none";
+        overlay.style.display = "none";
+    } else {
+        menu.style.display = "block";
+        overlay.style.display = "block";
+    }
+}
+
+
+// click outside to close
+
+window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("menuOverlay").onclick = () => {
+        document.querySelectorAll(".team-menu").forEach(m => m.style.display = "none");
+        document.getElementById("menuOverlay").style.display = "none";
+    };
+});
+
+function applyTheme() {
+    const homeColor = teams[homeTeam];
+    const awayColor = teams[awayTeam];
+
+    // Scoreboard names
+    document.querySelector(".home-team .team-name").textContent = homeTeam;
+    document.querySelector(".away-team .team-name").textContent = awayTeam;
+
+    // Ensure text contrast (simple version)
+    document.querySelector(".home-team .team-name").style.color = "white";
+    document.querySelector(".away-team .team-name").style.color = "white";
+
+    document.getElementById("momentumHome").style.background = homeColor;
+    document.getElementById("momentumAway").style.background = awayColor;
+
+
+
+    
+
+    
+// ✅ Page background (soft blend)
+document.body.style.background = `linear-gradient(135deg, ${homeColor}22, ${awayColor}22)`;
+
+// ✅ Scoreboard split gradient
+
+document.querySelector(".scoreboard").style.background = `linear-gradient(90deg, ${homeColor}, ${awayColor})`;
+
+
+
+    // Buttons
+    document.querySelectorAll(".plus").forEach(btn => {
+        btn.style.background = homeColor;
+    });
+
+    document.querySelectorAll(".minus").forEach(btn => {
+        btn.style.background = awayColor;
+    });
+}
+
+
+function updateMomentum() {
+    let homeScore = 0;
+    let awayScore = 0;
+
+    // ✅ Weighted stats (IMPORTANT)
+    const weights = {
+        "Goals": 5,
+        "Shots on Goal": 3,
+        "Circle Entry": 2,
+        "Attacking Corner": 2,
+        "Break Aways": 2
+    };
+
+    const quartersToUse = ["Q1", "Q2", "Q3", "Q4"];
+
+
+quartersToUse.forEach(q => {
+
+    statGroups.forEach(group => {
+        group.stats.forEach(stat => {
+
+            const weight = weights[stat] || 1;
+            homeScore += stats[q].Home[stat] * weight;
+            awayScore += stats[q].Away[stat] * weight;
+
+        });
+    });
+
+}); // ✅ ✅ ✅ THIS WAS MISSING
+
+
+    const total = homeScore + awayScore;
+
+    let homePercent = 50;
+    let awayPercent = 50;
+
+    if (total > 0) {
+        homePercent = (homeScore / total) * 100;
+        awayPercent = (awayScore / total) * 100;
+    }
+
+    document.getElementById("momentumHome").style.width = homePercent + "%";
+    document.getElementById("momentumAway").style.width = awayPercent + "%";
+}
+
+// initial render
+renderTable();
+updateScoreboard();
+
+populateMenus();
+applyTheme();
+
+updateMomentum();
+
+</script>
+
+<div id="menuOverlay"></div>
+
+<!-- Scripts for the exporting and creating of charts. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+</body>
+</html>

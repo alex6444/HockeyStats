@@ -461,7 +461,7 @@ button:active {
 
 <div class="actions">
 
-    <button class="export" onclick="exportCSV()">Export</button>
+    <button class="export" onclick="exportExcel()">Export Excel</button>
     <button class="reset" onclick="resetStats()">Reset</button>
 
 </div>
@@ -941,6 +941,493 @@ await Promise.all(chartPromises);
 
 
 
+
+async function exportExcel() {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Field Hockey Stats Tracker";
+    workbook.created = new Date();
+
+    const worksheet = workbook.addWorksheet("Match Report", {
+        views: [{ showGridLines: false }]
+    });
+
+    const homeColour = teams[homeTeam].replace("#", "");
+    const awayColour = teams[awayTeam].replace("#", "");
+
+    const GREEN = "C6EFCE";
+    const RED = "FFC7CE";
+    const YELLOW = "FFEB9C";
+    const DARK = "111827";
+    const MID_DARK = "374151";
+    const LIGHT_HEADER = "DBEAFE";
+    const SECTION_GREY = "E5E7EB";
+    const SOFT_BLUE = "EFF6FF";
+    const WHITE = "FFFFFF";
+
+    function isLowerBetter(stat) {
+        const name = stat.toLowerCase();
+
+        return (
+            name.includes("turnover") ||
+            name.includes("failed") ||
+            name.includes("no goal")
+        );
+    }
+
+    function getComparison(home, away, stat) {
+        const lowerBetter = isLowerBetter(stat);
+
+        if (home === away) {
+            return {
+                homeFill: YELLOW,
+                awayFill: YELLOW,
+                result: "Even"
+            };
+        }
+
+        if (lowerBetter) {
+            if (home < away) {
+                return {
+                    homeFill: GREEN,
+                    awayFill: RED,
+                    result: `${homeTeam} better`
+                };
+            } else {
+                return {
+                    homeFill: RED,
+                    awayFill: GREEN,
+                    result: `${awayTeam} better`
+                };
+            }
+        }
+
+        if (home > away) {
+            return {
+                homeFill: GREEN,
+                awayFill: RED,
+                result: `${homeTeam} better`
+            };
+        } else {
+            return {
+                homeFill: RED,
+                awayFill: GREEN,
+                result: `${awayTeam} better`
+            };
+        }
+    }
+
+    function styleCell(cell, options = {}) {
+        cell.font = {
+            name: "Calibri",
+            size: options.size || 11,
+            bold: options.bold || false,
+            color: { argb: options.fontColour || "FF111827" }
+        };
+
+        cell.alignment = {
+            vertical: "middle",
+            horizontal: options.align || "center",
+            wrapText: true
+        };
+
+        cell.border = {
+            top: { style: "thin", color: { argb: "FFD1D5DB" } },
+            left: { style: "thin", color: { argb: "FFD1D5DB" } },
+            bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+            right: { style: "thin", color: { argb: "FFD1D5DB" } }
+        };
+
+        if (options.fill) {
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF" + options.fill }
+            };
+        };
+    }
+
+    function safeFileName(name) {
+        return name.replace(/[^a-z0-9]/gi, "_");
+    }
+
+    async function createChartImage(stat) {
+        return new Promise(resolve => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 1100;
+            canvas.height = 380;
+            canvas.style.display = "none";
+            document.body.appendChild(canvas);
+
+            const ctx = canvas.getContext("2d");
+
+            const homeData = [];
+            const awayData = [];
+
+            quarters.forEach(q => {
+                homeData.push(stats[q].Home[stat]);
+                awayData.push(stats[q].Away[stat]);
+            });
+
+            const chart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: quarters,
+                    datasets: [
+                        {
+                            label: homeTeam,
+                            data: homeData,
+                            backgroundColor: teams[homeTeam]
+                        },
+                        {
+                            label: awayTeam,
+                            data: awayData,
+                            backgroundColor: teams[awayTeam]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        },
+                        title: {
+                            display: true,
+                            text: `${stat} by Quarter`,
+                            font: {
+                                size: 20,
+                                weight: "bold"
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                const image = canvas.toDataURL("image/png");
+                chart.destroy();
+                canvas.remove();
+                resolve(image);
+            }, 150);
+        });
+    }
+
+    // =========================
+    // TOP TITLE SECTION
+    // =========================
+
+    worksheet.mergeCells("A1:M1");
+    worksheet.getCell("A1").value = "Field Hockey Match Report";
+    styleCell(worksheet.getCell("A1"), {
+        bold: true,
+        size: 22,
+        fill: DARK,
+        fontColour: "FFFFFFFF"
+    });
+    worksheet.getRow(1).height = 34;
+
+    worksheet.mergeCells("A2:M2");
+    worksheet.getCell("A2").value = `${homeTeam} vs ${awayTeam}`;
+    styleCell(worksheet.getCell("A2"), {
+        bold: true,
+        size: 16,
+        fill: MID_DARK,
+        fontColour: "FFFFFFFF"
+    });
+    worksheet.getRow(2).height = 28;
+
+    worksheet.mergeCells("A3:F3");
+    worksheet.getCell("A3").value = homeTeam;
+    styleCell(worksheet.getCell("A3"), {
+        bold: true,
+        fill: homeColour,
+        fontColour: "FFFFFFFF"
+    });
+
+    worksheet.mergeCells("G3:M3");
+    worksheet.getCell("G3").value = awayTeam;
+    styleCell(worksheet.getCell("G3"), {
+        bold: true,
+        fill: awayColour,
+        fontColour: "FFFFFFFF"
+    });
+
+    worksheet.addRow([]);
+
+    // =========================
+    // MAIN TABLE
+    // =========================
+
+
+const headerRow = worksheet.addRow([
+    "Section",
+    "Stat",
+    `Q1 ${homeTeam}`,
+    `Q1 ${awayTeam}`,
+    `Q2 ${homeTeam}`,
+    `Q2 ${awayTeam}`,
+    `Q3 ${homeTeam}`,
+    `Q3 ${awayTeam}`,
+    `Q4 ${homeTeam}`,
+    `Q4 ${awayTeam}`,
+    `Total ${homeTeam}`,
+    `Total ${awayTeam}`,
+    "Result"
+]);
+
+
+    headerRow.height = 42;
+
+    headerRow.eachCell(cell => {
+        styleCell(cell, {
+            bold: true,
+            fill: LIGHT_HEADER
+        });
+    });
+
+    statGroups.forEach(group => {
+        const sectionRow = worksheet.addRow([group.title.toUpperCase()]);
+        worksheet.mergeCells(`A${sectionRow.number}:M${sectionRow.number}`);
+
+        styleCell(sectionRow.getCell(1), {
+            bold: true,
+            fill: SECTION_GREY,
+            align: "left"
+        });
+
+        sectionRow.height = 24;
+
+        group.stats.forEach(stat => {
+            let rowData = [group.title, stat];
+            let homeTotal = 0;
+            let awayTotal = 0;
+
+            quarters.forEach(q => {
+                const homeValue = stats[q].Home[stat];
+                const awayValue = stats[q].Away[stat];
+
+                rowData.push(homeValue);
+                rowData.push(awayValue);
+
+                homeTotal += homeValue;
+                awayTotal += awayValue;
+            });
+
+            const comparison = getComparison(homeTotal, awayTotal, stat);
+
+            rowData.push(homeTotal);
+            rowData.push(awayTotal);
+            rowData.push(comparison.result);
+
+            const row = worksheet.addRow(rowData);
+            row.height = 23;
+
+            row.eachCell(cell => {
+                styleCell(cell);
+            });
+
+            let col = 3;
+
+            quarters.forEach(q => {
+                const qHome = stats[q].Home[stat];
+                const qAway = stats[q].Away[stat];
+                const qCompare = getComparison(qHome, qAway, stat);
+
+                styleCell(row.getCell(col), {
+                    fill: qCompare.homeFill,
+                    bold: true
+                });
+
+                styleCell(row.getCell(col + 1), {
+                    fill: qCompare.awayFill,
+                    bold: true
+                });
+
+                col += 2;
+            });
+
+            styleCell(row.getCell(11), {
+                fill: comparison.homeFill,
+                bold: true
+            });
+
+            styleCell(row.getCell(12), {
+                fill: comparison.awayFill,
+                bold: true
+            });
+
+            styleCell(row.getCell(13), {
+                fill: comparison.result === "Even" ? YELLOW : SOFT_BLUE,
+                bold: true
+            });
+        });
+
+        worksheet.addRow([]);
+    });
+
+    // =========================
+    // INSIGHTS SECTION
+    // =========================
+
+    worksheet.addRow([]);
+
+    const insightsTitle = worksheet.addRow(["Key Match Insights"]);
+    worksheet.mergeCells(`A${insightsTitle.number}:M${insightsTitle.number}`);
+
+    styleCell(insightsTitle.getCell(1), {
+        bold: true,
+        size: 16,
+        fill: DARK,
+        fontColour: "FFFFFFFF",
+        align: "left"
+    });
+
+    statGroups.forEach(group => {
+        group.stats.forEach(stat => {
+            let homeTotal = 0;
+            let awayTotal = 0;
+
+            quarters.forEach(q => {
+                homeTotal += stats[q].Home[stat];
+                awayTotal += stats[q].Away[stat];
+            });
+
+            const comparison = getComparison(homeTotal, awayTotal, stat);
+
+            const text =
+                comparison.result === "Even"
+                    ? `${stat} was even (${homeTotal}-${awayTotal}).`
+                    : `${comparison.result} for ${stat} (${homeTotal} vs ${awayTotal}).`;
+
+            const insightRow = worksheet.addRow([text]);
+            worksheet.mergeCells(`A${insightRow.number}:M${insightRow.number}`);
+
+            styleCell(insightRow.getCell(1), {
+                align: "left",
+                fill: comparison.result === "Even" ? YELLOW : "F9FAFB"
+            });
+        });
+    });
+
+    // =========================
+    // CHARTS SECTION
+    // =========================
+
+    worksheet.addRow([]);
+
+    const chartsTitle = worksheet.addRow(["Charts by Stat"]);
+    worksheet.mergeCells(`A${chartsTitle.number}:M${chartsTitle.number}`);
+
+    styleCell(chartsTitle.getCell(1), {
+        bold: true,
+        size: 16,
+        fill: DARK,
+        fontColour: "FFFFFFFF",
+        align: "left"
+    });
+
+    let chartStartRow = chartsTitle.number + 2;
+
+    for (const group of statGroups) {
+        const groupRow = worksheet.getRow(chartStartRow);
+        groupRow.getCell(1).value = group.title.toUpperCase();
+        worksheet.mergeCells(`A${chartStartRow}:M${chartStartRow}`);
+
+        styleCell(groupRow.getCell(1), {
+            bold: true,
+            fill: SECTION_GREY,
+            align: "left"
+        });
+
+        chartStartRow += 2;
+
+        for (const stat of group.stats) {
+            const imageData = await createChartImage(stat);
+
+            const imageId = workbook.addImage({
+                base64: imageData,
+                extension: "png"
+            });
+
+            worksheet.addImage(imageId, {
+                tl: { col: 0, row: chartStartRow - 1 },
+                ext: { width: 900, height: 310 }
+            });
+
+            chartStartRow += 18;
+        }
+
+        chartStartRow += 2;
+    }
+
+
+// =========================
+// COLUMN WIDTHS / FREEZE
+// =========================
+
+// ✅ Dynamically size team columns based on team name length
+const homeTeamColumnWidth = Math.max(18, Math.min(homeTeam.length + 8, 28));
+const awayTeamColumnWidth = Math.max(18, Math.min(awayTeam.length + 8, 28));
+
+worksheet.columns = [
+    { width: 24 }, // Section
+    { width: 30 }, // Stat
+
+    { width: homeTeamColumnWidth }, // Q1 Home Team
+    { width: awayTeamColumnWidth }, // Q1 Away Team
+
+    { width: homeTeamColumnWidth }, // Q2 Home Team
+    { width: awayTeamColumnWidth }, // Q2 Away Team
+
+    { width: homeTeamColumnWidth }, // Q3 Home Team
+    { width: awayTeamColumnWidth }, // Q3 Away Team
+
+    { width: homeTeamColumnWidth }, // Q4 Home Team
+    { width: awayTeamColumnWidth }, // Q4 Away Team
+
+    { width: homeTeamColumnWidth + 2 }, // Total Home Team
+    { width: awayTeamColumnWidth + 2 }, // Total Away Team
+
+    { width: 22 } // Result
+];
+
+
+    worksheet.views = [
+        {
+            state: "frozen",
+            ySplit: 5,
+            showGridLines: false
+        }
+    ];
+
+    // =========================
+    // DOWNLOAD
+    // =========================
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${safeFileName(homeTeam)}_vs_${safeFileName(awayTeam)}_match_report.xlsx`;
+    link.click();
+}
+
+
+
+
 function resetStats() {
     if (!confirm("Are you sure you want to reset all stats?")) return;
 
@@ -1146,8 +1633,9 @@ updateMomentum();
 <div id="menuOverlay"></div>
 
 <!-- Scripts for the exporting and creating of charts. -->
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </body>
 </html>

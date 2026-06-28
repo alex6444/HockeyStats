@@ -964,15 +964,16 @@ async function exportExcel() {
     const SOFT_BLUE = "EFF6FF";
     const WHITE = "FFFFFF";
 
-    function isLowerBetter(stat) {
-        const name = stat.toLowerCase();
 
-        return (
-            name.includes("turnover") ||
-            name.includes("failed") ||
-            name.includes("no goal")
-        );
-    }
+function isLowerBetter(stat) {
+    const name = stat.toLowerCase();
+
+    return (
+        name.includes("failed") ||
+        name.includes("no goal")
+    );
+}
+
 
     function getComparison(home, away, stat) {
         const lowerBetter = isLowerBetter(stat);
